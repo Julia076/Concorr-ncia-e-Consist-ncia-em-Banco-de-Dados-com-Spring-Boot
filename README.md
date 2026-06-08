@@ -1,46 +1,15 @@
-# Concorrência e Consistência em Banco de Dados
+# Concorrência e Consistência em Banco de Dados com Spring Boot
 
-Trabalho prático sobre controle de concorrência em aplicações Java com Spring Boot e JPA.
+Este projeto demonstra e analisa os impactos da concorrência em sistemas transacionais, evidenciando o problema clássico de **Lost Update (Atualização Perdida)** e aplicando a solução de **Controle de Versão Otimista** com JPA/Hibernate e banco de dados H2.
+
+---
 
 ## Alunas
 
-| Nome | Responsabilidade |
-|------|-----------------|
-| Marielli Alves MAcedo | Parte 1 — Sem controle de concorrência |
-| Julia Monteiro Rodrigues | Parte 2 — Controle com `@Version` |
-
----
-
-## Sobre o Projeto
-
-Este projeto demonstra na prática os problemas gerados pela falta de controle de concorrência em operações bancárias simultâneas, e como a anotação `@Version` do Hibernate resolve esse problema através do mecanismo de **bloqueio otimista**.
-
-### O problema: Lost Update
-
-Sem controle de concorrência, duas threads podem ler o mesmo saldo, aplicar operações independentes e salvar — fazendo com que uma das atualizações seja perdida silenciosamente.
-
-```
-Thread A lê saldo: R$ 100
-Thread B lê saldo: R$ 100
-Thread A deposita R$ 50 → salva R$ 150
-Thread B deposita R$ 30 → salva R$ 130  ← sobrescreve Thread A!
-Saldo correto deveria ser: R$ 180
-```
-
-### A solução: `@Version`
-
-Com `@Version`, o Hibernate verifica se o registro foi modificado desde a última leitura. Se sim, lança `ObjectOptimisticLockingFailureException` e a operação é abortada — evitando dados corrompidos.
-
----
-
-## 🚀 Tecnologias
-
-- Java 17
-- Spring Boot
-- Spring Data JPA
-- Hibernate
-- Banco H2 (em memória)
-- Apache JMeter
+| Aluno | Responsabilidade |
+|-------|-----------------|
+| **Aluno A** – Marielli Alves MAcedo| Implementação da Parte 1 – Cenário Sem Bloqueio, entidade `ContaBancaria`, regras de negócio iniciais e testes de estresse no Apache JMeter para evidenciar a inconsistência de saldo. |
+| **Aluno B** – Júlia Monteiro Rodrigues | Implementação da Parte 2 – Solução Otimista, entidade `ContaBancariaVersionada` com `@Version`, interceptação de `ObjectOptimisticLockingFailureException` retornando HTTP `409 Conflict` e validação final com JMeter. |
 
 ---
 
@@ -49,92 +18,85 @@ Com `@Version`, o Hibernate verifica se o registro foi modificado desde a últim
 ### Pré-requisitos
 
 - Java 17+
-- Maven 3.8+
+- Apache JMeter (para execução dos planos de teste)
 
 ### Passos
 
-```bash
-# 1. Clonar o repositório
-git clone URL_DO_REPOSITORIO
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/SEU-USUARIO/NOME-DO-REPOSITORIO.git
+   ```
 
-# 2. Entrar na pasta
-cd nome-do-projeto
+2. Execute a aplicação na raiz do projeto:
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
-# 3. Executar
-mvn spring-boot:run
-```
+3. A aplicação estará disponível em `http://localhost:8080`.
 
-A aplicação sobe em `http://localhost:8080`.
-
-### Console H2
-
-Acesse `http://localhost:8080/h2-console` com as configurações:
-
-```
-JDBC URL : jdbc:h2:mem:testdb
-User     : sa
-Password : (deixar em branco)
-```
+4. O console do banco H2 pode ser acessado em `http://localhost:8080/h2-console`:
+   - **JDBC URL:** `jdbc:h2:mem:bancodb`
+   - **Usuário:** `sa`
+   - **Senha:** *(deixar em branco)*
 
 ---
 
-## Endpoints
+## 📊 Relatório de Análise Comparativa
 
-### Parte 1 — Sem controle de concorrência
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `POST` | `/contas/{id}/deposito` | Realiza depósito na conta |
-| `POST` | `/contas/{id}/saque` | Realiza saque na conta |
-
-### Parte 2 — Com controle de versão
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `POST` | `/contas-versionadas/{id}/deposito` | Depósito com controle de versão |
-| `POST` | `/contas-versionadas/{id}/saque` | Saque com controle de versão |
-
-**Exemplo de body:**
-```json
-{
-  "valor": 100.00
-}
-```
+Os testes foram executados com **100 threads simultâneas** no JMeter, todas disparando a operação de depósito na mesma conta corrente.
 
 ---
 
-##  Testes de Concorrência (JMeter)
+### 🔴 Cenário 1 — Sem Bloqueio (Lost Update)
 
-Os testes simulam múltiplos usuários realizando operações simultâneas na mesma conta.
+**Comportamento:** Duas ou mais requisições leram o mesmo saldo inicial concorrentemente, calcularam o novo valor em memória e sobrescreveram o resultado uma da outra.
 
-### Cenário 1 — Sem `@Version`
+**Resultado no JMeter:** 100% das requisições retornaram `200 OK` (sucesso aparente).
 
-- **Configuração:** N threads simultâneas sobre a mesma conta
-- **Resultado esperado:** Inconsistências de saldo (Lost Update)
-- **Observação:** O saldo final diverge do valor correto sem nenhum erro ser lançado
+**Inconsistência:** Apesar dos 100 depósitos, o saldo final ficou corrompido e defasado — prova de que as escritas simultâneas causaram perdas massivas de dados.
 
-### Cenário 2 — Com `@Version`
+#### Evidências
 
-- **Configuração:** Mesmas N threads sobre a conta versionada
-- **Resultado esperado:** `ObjectOptimisticLockingFailureException` em operações conflitantes
-- **Observação:** O saldo permanece consistente; conflitos são detectados e tratados
+**Relatório de Amostras (0% de erro aparente):**
+![Relatório de Amostras - Sem Trava](Captura de tela 2026-06-08 142204.png)
 
----
+**Árvore de Resultados (todas as requisições verdes):**
+![Árvore de Resultados - Requisições Verdes](Captura de tela 2026-06-08 142129.png)
 
-## Comparativo
-
-| | Sem `@Version` | Com `@Version` |
-|---|---|---|
-| Integridade dos dados | ❌ Comprometida | ✅ Garantida |
-| Lost Update | ❌ Ocorre silenciosamente | ✅ Detectado e rejeitado |
-| Erro em conflito | ❌ Nenhum | ✅ `ObjectOptimisticLockingFailureException` |
-| Consistência sob carga | ❌ Não | ✅ Sim |
+**Console H2 (saldo final inconsistente):**
+![Console H2 - Saldo Corrompido](Captura de tela 2026-06-08 142144.png)
 
 ---
 
-## Conceitos Abordados
+### 🟢 Cenário 2 — Com Controle Otimista (`@Version`)
 
-- **Lost Update** — problema clássico de concorrência onde uma atualização sobrescreve outra
-- **Bloqueio Otimista** — estratégia que permite leituras livres e valida conflitos apenas na escrita
-- **`@Version`** — anotação JPA/Hibernate que implementa bloqueio otimista via campo de versão
-- **`ObjectOptimisticLockingFailureException`** — exceção lançada pelo Spring quando um conflito é detectado
+**Comportamento:** O Hibernate passou a verificar o número de versão do registro antes de cada commit. A primeira transação incrementou a versão; as demais, baseadas em uma versão desatualizada, foram rejeitadas imediatamente.
+
+**Resultado no JMeter:** Apenas as requisições sem conflito retornaram sucesso. As demais falharam de forma intencional e controlada (~64% de conflitos interceptados).
+
+**Tratamento:** A exceção `ObjectOptimisticLockingFailureException` foi capturada no Controller, retornando `409 Conflict` ao cliente e garantindo integridade total do saldo.
+
+#### Evidências
+
+**Árvore de Resultados (bloqueios retornando falha controlada em vermelho):**
+![Árvore de Resultados - Bloqueio Ativo](Captura de tela 2026-06-08 141840.png)
+
+**Relatório de Erros (64% de concorrência interceptada):**
+![Relatório de Erros - Taxa de 64%](Captura de tela 2026-06-08 140908.png)
+
+**Console H2 (saldo protegido e coluna VERSION incrementada corretamente):**
+![Console H2 - Dados Protegidos com Versão](Captura de tela 2026-06-08 140849.png)
+
+---
+
+## Resumo Comparativo
+
+| Indicador | 🔴 Cenário 1 (Sem Controle) | 🟢 Cenário 2 (Com `@Version`) |
+|-----------|----------------------------|-------------------------------|
+| **Status HTTP no JMeter** | 100% `200 OK` (sucesso falso) | Falhas controladas `409 Conflict` |
+| **Integridade dos Dados** | Corrompida (saldo inconsistente) | Totalmente preservada |
+| **Comportamento do Banco** | Sobrescrita cega de registros | Validação de versão antes do commit |
+
+---
+
+> 📁 O arquivo de plano de testes do JMeter (`.jmx`) encontra-se na raiz do repositório para fins de auditoria e reprodução dos experimentos.
