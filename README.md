@@ -57,13 +57,16 @@ Os testes foram executados com **100 threads simultâneas** no JMeter, todas dis
 #### Evidências
 
 **Relatório de Amostras (0% de erro aparente):**
-![Relatório de Amostras - Sem Trava](Captura de tela 2026-06-08 142204.png)
+
+![Relatório de Amostras](imagens/relatorio-amostras.png)
 
 **Árvore de Resultados (todas as requisições verdes):**
-![Árvore de Resultados - Requisições Verdes](Captura de tela 2026-06-08 142129.png)
+
+![Árvore de Resultados](imagens/arvore-resultados.png)
 
 **Console H2 (saldo final inconsistente):**
-![Console H2 - Saldo Corrompido](Captura de tela 2026-06-08 142144.png)
+
+![Console H2](imagens/console-h2-corrompido.png)
 
 ---
 
@@ -78,13 +81,16 @@ Os testes foram executados com **100 threads simultâneas** no JMeter, todas dis
 #### Evidências
 
 **Árvore de Resultados (bloqueios retornando falha controlada em vermelho):**
-![Árvore de Resultados - Bloqueio Ativo](Captura de tela 2026-06-08 141840.png)
+
+![Árvore de Resultados - Bloqueio Ativo](imagens/arvore-bloqueio-ativo.png)
 
 **Relatório de Erros (64% de concorrência interceptada):**
-![Relatório de Erros - Taxa de 64%](Captura de tela 2026-06-08 140908.png)
+
+![Relatório de Erros](imagens/relatorio-erros-64.png)
 
 **Console H2 (saldo protegido e coluna VERSION incrementada corretamente):**
-![Console H2 - Dados Protegidos com Versão](Captura de tela 2026-06-08 140849.png)
+
+![Console H2 - Versão](imagens/console-h2-versao.png)
 
 ---
 
