@@ -1,4 +1,4 @@
-# 🏦 Concorrência e Consistência em Banco de Dados
+# Concorrência e Consistência em Banco de Dados
 
 Trabalho prático sobre controle de concorrência em aplicações Java com Spring Boot e JPA.
 
