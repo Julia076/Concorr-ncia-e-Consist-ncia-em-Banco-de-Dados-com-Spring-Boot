@@ -22,10 +22,9 @@ Este projeto demonstra e analisa os impactos da concorrência em sistemas transa
 
 ### Passos
 
-1. Clone o repositório:
+1. Clone este repositório em sua máquina local:
    ```bash
-   git clone https://github.com/SEU-USUARIO/NOME-DO-REPOSITORIO.git
-   ```
+   git clone https://github.com/Julia076/concorrencia-e-consistencia-spring-boot.git
 
 2. Execute a aplicação na raiz do projeto:
    ```bash
@@ -41,7 +40,7 @@ Este projeto demonstra e analisa os impactos da concorrência em sistemas transa
 
 ---
 
-## 📊 Relatório de Análise Comparativa
+## Relatório de Análise Comparativa
 
 Os testes foram executados com **100 threads simultâneas** no JMeter, todas disparando a operação de depósito na mesma conta corrente.
 
